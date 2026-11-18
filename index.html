@@ -79,7 +79,7 @@ h2{font-family:var(--font-display);font-weight:600;font-size:1.1rem;margin:0}
 
 /* Bühne */
 .stage{display:grid;grid-template-columns:136px minmax(0,1fr) minmax(0,1.3fr);gap:18px;align-items:stretch;overflow-x:clip}
-.stage.p2{grid-template-columns:minmax(0,720px);justify-content:center}
+.stage.p2{grid-template-columns:minmax(0,920px);justify-content:center}
 .stage.p3{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
 .stage.p2 #device,.stage.p2 #atomPanel,.stage.p3 #device,.stage.p3 #atomPanel{display:none}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0;position:relative;display:flex;flex-direction:column;gap:10px}
@@ -176,6 +176,13 @@ h2{font-family:var(--font-display);font-weight:600;font-size:1.1rem;margin:0}
 .zone{fill:transparent;stroke:none;pointer-events:none}
 .zone.over{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 4}
 .placeholder{fill:var(--muted);font:italic 13px var(--font-body)}
+/* Farben und Pfeile rechts neben Diagramm und Modell: Ziehen von rechts nach links (auf dem iPad beendet Ziehen nach unten den Vollbildmodus) */
+.chart-body{display:flex;gap:12px;align-items:center;min-width:0}
+.chart-body svg{flex:1 1 auto;min-width:0}
+.side-palette{flex:none;width:160px;display:flex;flex-direction:column;gap:8px}
+.side-palette .palette{grid-template-columns:1fr}
+.side-palette .btn{width:100%}
+@media (max-width:600px){.chart-body,.model-body{flex-direction:column;align-items:stretch}.side-palette{width:auto}.side-palette .palette{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}}
 /* Modell links, Elektronen-Vorrat rechts daneben */
 .model-body{display:flex;gap:10px;align-items:center;min-width:0}
 .model-body svg{flex:1 1 auto;min-width:0}
@@ -296,24 +303,26 @@ h1{font-size:clamp(1.25rem,2.2vw,1.65rem)}
 
       <div class="panel chart-panel" id="chartPanel">
         <div class="panel-head"><h2>Ionisierungsenergien der Elektronen eines Aluminium-Atoms</h2></div>
-        <div id="chartPalette" hidden>
-          <div class="palette" data-palette data-arrow-chip></div>
-          <p class="palette-hint">Ziehe den Sprung-Pfeil zwischen zwei Säulen und die Farben auf die Säulen. Du kannst auch zuerst einen Pfeil oder eine Farbe antippen und danach die Stelle im Diagramm. Tippe einen Pfeil an, um ihn wieder zu entfernen.</p>
+        <div class="chart-body">
+          <svg id="chart" viewBox="0 0 560 425" aria-label="Säulendiagramm der Ionisierungsenergien"></svg>
+          <div id="chartPalette" class="side-palette" hidden>
+            <div class="palette" data-palette data-arrow-chip></div>
+            <p class="palette-hint">Ziehe den Pfeil zwischen zwei Säulen und die Farben auf die Säulen. Antippen eines Pfeils entfernt ihn.</p>
+            <div id="chartActions" hidden><button class="btn" type="button" id="btnCheck">Überprüfen</button></div>
+          </div>
         </div>
-        <svg id="chart" viewBox="0 0 560 425" aria-label="Säulendiagramm der Ionisierungsenergien"></svg>
-        <div class="row" id="chartActions" hidden><button class="btn" type="button" id="btnCheck">Überprüfen</button></div>
         <p class="feedback" id="chartFb" role="status"></p>
       </div>
 
       <div class="panel" id="modelPanel" hidden>
         <div class="panel-head"><h2>Energiestufenmodell</h2></div>
-        <div id="modelPalette" hidden>
-          <div class="palette" data-palette></div>
-          <p class="palette-hint">Ziehe jede Farbe auf das passende Energieniveau.</p>
-        </div>
         <div class="model-body">
           <svg id="levels" viewBox="0 0 400 400" aria-label="Energiestufenmodell des Aluminium-Atoms"></svg>
           <div class="model-side">
+            <div id="modelPalette" class="side-palette" hidden>
+              <div class="palette" data-palette></div>
+              <p class="palette-hint">Ziehe jede Farbe auf das passende Energieniveau.</p>
+            </div>
             <div id="fillRow" hidden><button class="btn small" type="button" id="btnFill">Energieniveaus besetzen</button></div>
             <div class="tray" id="tray" hidden></div>
           </div>
@@ -734,7 +743,7 @@ function enterCheck(){
   renderChart();
   task.innerHTML = `
     <span class="eyebrow">Arbeitsauftrag</span>
-    <p class="ws-note">${WS}<span>Überprüfe deine Markierungen vom Arbeitsblatt: Ziehe Sprung-Pfeile zwischen die Säulen, zwischen denen die Ionisierungsenergie sprunghaft ansteigt. Färbe dann die Säulen jeder Gruppe in der passenden Farbe ein. Tippe anschließend unter dem Diagramm auf „Überprüfen“.</span></p>`;
+    <p class="ws-note">${WS}<span>Überprüfe deine Markierungen vom Arbeitsblatt: Ziehe Sprung-Pfeile zwischen die Säulen, zwischen denen die Ionisierungsenergie sprunghaft ansteigt. Färbe dann die Säulen jeder Gruppe in der passenden Farbe ein. Tippe anschließend rechts neben dem Diagramm auf „Überprüfen“.</span></p>`;
   window.scrollTo({top:0, behavior: RM ? 'auto' : 'smooth'});
 }
 function checkColors(){
