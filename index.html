@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Energiestufenmodell Aluminium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: Auftrag oben · darunter Messgerät | Atom | Diagramm, später Diagramm | Energiestufenmodell · Weiter-Knopf rechts unten */
+:root{
+  --bg:#FFF5EA;
+  --panel:#FFFDF8;
+  --ink:#2A2420;
+  --muted:#75685C;
+  --line:#E9D8C3;
+  --accent:#24646B;
+  --accent-dark:#1A4C52;
+  --on-accent:#FFFFFF;
+  --device:#34413F;
+  --device-ink:#DCE5DF;
+  --lcd-bg:#C6D2B4;
+  --lcd-ink:#1C2617;
+  --nucleus:#A33B26;
+  --bar:#3F4B5C;
+  --jump:#B3261E;
+  --ok:#2E7D4F;
+  --bad:#B3261E;
+  --lv1:#FFF2CC;               /* 1. Energieniveau, 100 % */
+  --lv1-edge:#CFA63A;
+  --lv2:#DEEBF7;               /* 2. Energieniveau, 100 % */
+  --lv2-edge:#6F98C6;
+  --lv3:rgba(223,184,204,.56); /* 3. Energieniveau, #DFB8CC mit 56 % */
+  --lv3-edge:#B16F93;
+  --font-display:'Bricolage Grotesque','Avenir Next','Segoe UI',system-ui,sans-serif;
+  --font-body:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+  --font-mono:'Share Tech Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg)}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--font-body);-webkit-tap-highlight-color:transparent}
+:fullscreen{overflow:auto;background:var(--bg)}
+.wrap{max-width:1260px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+header.top .tools{display:flex;gap:10px;flex-wrap:wrap}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.35rem,2.6vw,1.9rem);line-height:1.15;margin:0;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted)}
+h2{font-family:var(--font-display);font-weight:600;font-size:1.1rem;margin:0}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+
+.btn{font:inherit;font-weight:700;cursor:pointer;border:1.5px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:999px;padding:.6em 1.3em;min-height:44px;transition:background .15s,transform .1s;touch-action:manipulation}
+.btn:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.ghost:hover{background:rgba(36,100,107,.08)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.slider:focus-visible,.chip:focus-visible,.e-src:focus-visible,.step-card button:focus-visible{outline:3px solid #E0A526;outline-offset:2px}
+
+/* Auftragskarte */
+.task{margin-bottom:16px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.task p{margin:0;max-width:78ch}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.progress{display:flex;gap:5px;flex-wrap:wrap}
+.progress i{width:14px;height:14px;border-radius:50%;background:#000000;transition:background .3s}
+.progress i.gone{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
+.feedback{margin:0;font-weight:700;min-height:1.5em}
+.feedback.ok{color:var(--ok)}
+.feedback.bad{color:var(--bad)}
+.explain{background:var(--bg);border-radius:10px;padding:12px 14px}
+.explain p+p{margin-top:6px}
+.figure-row{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center}
+.figure-row svg{width:100%;max-width:360px;height:auto;flex:0 1 360px}
+.figure-row .figtext{flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.ws-note{display:flex;gap:10px;align-items:center}
+
+/* Bühne */
+.stage{display:grid;grid-template-columns:136px minmax(0,1fr) minmax(0,1.3fr);gap:18px;align-items:stretch;overflow-x:clip}
+.stage.p2{grid-template-columns:minmax(0,720px);justify-content:center}
+.stage.p3{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.stage.p2 #device,.stage.p2 #atomPanel,.stage.p3 #device,.stage.p3 #atomPanel{display:none}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0;position:relative;display:flex;flex-direction:column;gap:10px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.panel svg{width:100%;height:auto;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.tray,.palette{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.p-enter{animation:slidein .5s ease}
+@keyframes slidein{from{opacity:0;transform:translateX(24px)}}
+.next-row{display:flex;justify-content:flex-end;margin-top:16px}
+
+/* Spannungsquelle */
+.device{background:var(--device);color:var(--device-ink);border-radius:14px;padding:14px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:12px;transition:opacity .3s}
+.device.off{opacity:.4;pointer-events:none}
+.device .eyebrow{color:var(--device-ink);opacity:.85}
+.slider{position:relative;width:112px;height:380px;touch-action:none;cursor:grab;border-radius:8px;-webkit-user-select:none;user-select:none}
+.slider.dragging{cursor:grabbing}
+.rail{position:absolute;top:16px;bottom:16px;left:0;right:0}
+/* Trichter: unten schmal und hellrot, oben breit und rot */
+.funnel{position:absolute;left:0;right:0;bottom:0;height:var(--rail-h,348px);background:linear-gradient(to top,#F7B9B3,#D3211A);clip-path:polygon(calc(50% - 4px) 100%,calc(50% + 4px) 100%,calc(50% + 28px) 0,calc(50% - 28px) 0)}
+.funnel.bg{top:0;height:auto;opacity:.35}
+.funnel-fill{position:absolute;left:0;right:0;bottom:0;height:0;overflow:hidden}
+.thumb{position:absolute;left:calc(50% - 22px);width:44px;height:26px;margin-bottom:-13px;border-radius:7px;background:linear-gradient(#F4F1EC,#C9C2B8);border:1px solid #1E2625;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.thumb::after{content:"";position:absolute;left:7px;right:7px;top:11px;height:2px;background:#6E655C;border-radius:1px}
+.lcd{width:100%;background:var(--lcd-bg);color:var(--lcd-ink);border-radius:6px;padding:6px 8px 5px;box-shadow:inset 0 2px 4px rgba(0,0,0,.35);text-align:right;font-family:var(--font-mono)}
+.lcd-cap{display:block;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+.lcd output{font-size:21px;font-variant-numeric:tabular-nums;line-height:1.2}
+.lcd .unit{font-size:14px;margin-left:3px}
+.device .hint{font-size:12px;line-height:1.3;text-align:center;opacity:.85;margin:0}
+
+/* Atom */
+.hull{fill:rgba(36,100,107,.05);stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 5}
+.nucleus{fill:var(--nucleus)}
+.nucleus-text{fill:#FFFFFF;font:700 8.5px var(--font-body)}
+.e-dot{fill:#000000;transition:opacity .7s ease,transform .7s ease;transform-box:fill-box;transform-origin:center}
+.e-dot.gone{opacity:0;transform:scale(.3)}
+.flash{position:absolute;left:50%;top:50px;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:.3em .9em;font-size:.9rem;white-space:nowrap;opacity:0;transition:opacity .25s;pointer-events:none;font-variant-numeric:tabular-nums}
+.flash.show{opacity:1}
+
+/* Farbauswahl */
+.palette{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.chip{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:#FFFFFF;border-radius:10px;padding:6px 8px 6px 6px;font:inherit;font-size:.8rem;line-height:1.2;color:var(--ink);cursor:grab;touch-action:none;text-align:left;min-height:44px;-webkit-user-select:none;user-select:none}
+.chip.armed{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.sw{width:30px;height:30px;border-radius:7px;flex:none;border:2px solid}
+.sw.c1{background:var(--lv1);border-color:var(--lv1-edge)}
+.sw.c2{background:var(--lv2);border-color:var(--lv2-edge)}
+.sw.c3{background:#FFFFFF;border-color:var(--lv3-edge);background-image:linear-gradient(var(--lv3),var(--lv3))}
+.sw.arrow{border-color:var(--line);background:#FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath d='M15 26V9' stroke='%23B3261E' stroke-width='3'/%3E%3Cpath d='M15 3l-6 9h12z' fill='%23B3261E'/%3E%3C/svg%3E") center/26px no-repeat}
+.drag-ghost{position:fixed;left:0;top:0;pointer-events:none;z-index:100;transform:translate(-50%,-50%) scale(1.15);box-shadow:0 6px 16px rgba(42,36,32,.3)}
+.drag-ghost.e{width:22px;height:22px;border-radius:50%;background:#000000;border:0}
+.palette-hint{margin:0;font-size:.85rem;color:var(--muted)}
+
+/* Diagramm */
+.axis{stroke:var(--ink);stroke-width:1.5;fill:none}
+.grid{stroke:var(--line);stroke-width:1}
+.grid.minor{stroke-dasharray:2 3;opacity:.7}
+.tick-label{fill:var(--muted);font:11px var(--font-body);font-variant-numeric:tabular-nums}
+.axis-title{fill:var(--ink);font:700 13px var(--font-body)}
+.bar{fill:#FFFFFF;stroke:var(--bar);stroke-width:1.6}
+.bar.c1{fill:var(--lv1);stroke:var(--lv1-edge);stroke-width:2}
+.bar.c2{fill:var(--lv2);stroke:var(--lv2-edge);stroke-width:2}
+.bar.c3{fill:#FFFFFF;stroke:var(--lv3-edge);stroke-width:2}
+.bar-tint{fill:var(--lv3);pointer-events:none}
+.bar.grow{animation:grow .65s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:50% 100%}
+@keyframes grow{from{transform:scaleY(0)}}
+.slot{fill:none;stroke:var(--line);stroke-dasharray:3 3}
+.hit{fill:transparent;cursor:pointer}
+.arrow-hit{stroke:transparent;stroke-width:16;cursor:pointer}
+.jump{stroke:var(--jump);stroke-width:2.2;fill:none}
+.jump-label{fill:var(--jump);font:700 12px var(--font-body)}
+.bracket{stroke:var(--ink);stroke-width:1.3;fill:none}
+.group-label{fill:var(--ink);font:700 12px var(--font-body)}
+@keyframes fadein{from{opacity:0}}
+
+/* Energiestufenmodell */
+.lv-band{fill:none;stroke:none;stroke-width:2;transition:fill .4s}
+.lv-band.c1{fill:var(--lv1);stroke:var(--lv1-edge)}
+.lv-band.c2{fill:var(--lv2);stroke:var(--lv2-edge)}
+.lv-band.c3{fill:var(--lv3);stroke:var(--lv3-edge)}
+.lv-line{stroke:var(--ink);stroke-width:2.5;fill:none}
+.arrowhead{fill:var(--ink)}
+.lv-label{fill:var(--ink);font:700 15px var(--font-body)}
+.axis-e{fill:var(--ink);font:italic 700 18px var(--font-body)}
+.gap-arrow{stroke:var(--jump);stroke-width:1.5;fill:none}
+.gap-title{fill:var(--jump);font:700 12px var(--font-body)}
+.gap-text{fill:var(--muted);font:11px var(--font-body)}
+.reveal{opacity:0;transition:opacity .6s ease}
+.reveal.on{opacity:1}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .9s ease}
+.draw.on{stroke-dashoffset:0}
+.dot{fill:#000000}
+.dot.removable{cursor:pointer}
+.pop{animation:pop .4s cubic-bezier(.3,1.6,.5,1);transform-box:fill-box;transform-origin:center}
+@keyframes pop{from{transform:scale(0)}}
+.zone{fill:transparent;stroke:none;pointer-events:none}
+.zone.over{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 4}
+.placeholder{fill:var(--muted);font:italic 13px var(--font-body)}
+/* Modell links, Elektronen-Vorrat rechts daneben */
+.model-body{display:flex;gap:10px;align-items:center;min-width:0}
+.model-body svg{flex:1 1 auto;min-width:0}
+.model-side{flex:none;display:flex;flex-direction:column;gap:8px}
+.btn.small{font-size:.85rem;line-height:1.25;padding:.55em .8em;max-width:130px}
+.tray{display:grid;grid-template-columns:repeat(2,36px);gap:4px 6px;justify-content:center;align-content:start;padding:8px 6px;border:1.5px dashed var(--line);border-radius:12px;min-height:120px}
+.tray .label{grid-column:1 / -1;text-align:center;font-size:.75rem;color:var(--muted)}
+.e-src{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;touch-action:none;cursor:grab;background:transparent;border:0;padding:0}
+.e-src::before{content:"";width:20px;height:20px;border-radius:50%;background:#000000}
+
+/* Pop-up */
+.overlay{position:fixed;inset:0;background:rgba(42,36,32,.5);display:grid;place-items:center;z-index:50;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));animation:fadein .25s ease}
+.overlay.aside{background:rgba(42,36,32,.06);place-items:center start}
+.overlay.aside .modal{max-width:400px}
+@media (max-width:900px){.overlay.aside{place-items:start center}}
+.modal{background:var(--panel);border-radius:16px;max-width:580px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:26px 26px 22px;box-shadow:0 18px 50px rgba(42,36,32,.35);display:flex;flex-direction:column;gap:14px}
+.modal.ws{border-top:8px solid #E0A526}
+.modal-head{display:flex;align-items:center;gap:12px;font-family:var(--font-display);font-weight:700;font-size:1.25rem;color:var(--ink)}
+.ws-icon{width:48px;height:48px;flex:none}
+.ws-icon.sm{width:30px;height:30px}
+.modal p{margin:0;font-size:1.08rem}
+.modal .actions{display:flex;justify-content:flex-end}
+.rule{border-radius:10px;padding:10px 14px;background:var(--bg);margin:0}
+
+/* Abschluss: Schritt-für-Schritt-Anleitung */
+.order{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.order .intro{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.order .intro p{margin:0}
+.order-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.order-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.step-card{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:10px 10px 10px 8px;transition:border-color .2s,background .2s,box-shadow .2s}
+.step-card.dragging{box-shadow:0 8px 22px rgba(42,36,32,.25);border-color:var(--accent);position:relative;z-index:2}
+.grip{width:30px;align-self:stretch;display:grid;place-items:center;cursor:grab;touch-action:none;color:var(--muted);font-size:18px;letter-spacing:-2px;-webkit-user-select:none;user-select:none}
+.step-card .num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;background:var(--bg);border:1.5px solid var(--line)}
+.step-card .txt{margin:0}
+.step-card .txt p{margin:0}
+.step-card .txt p+p{margin-top:.5em}
+.step-card .move{display:flex;flex-direction:column;gap:4px}
+.step-card .move button{font:inherit;width:40px;height:34px;border:1.5px solid var(--line);background:#FFFFFF;border-radius:8px;cursor:pointer;color:var(--ink);line-height:1;touch-action:manipulation}
+.step-card .move button:disabled{opacity:.3;cursor:default}
+.step-card.ok{border-color:var(--ok);background:#EEF7F0}
+.step-card.ok .num{background:var(--ok);color:#FFFFFF;border-color:var(--ok)}
+.step-card.bad{border-color:var(--bad);background:#FBEDEB}
+.step-card.bad .num{background:var(--bad);color:#FFFFFF;border-color:var(--bad)}
+.img-card .thumb-img{min-width:0}
+.img-card .thumb-img svg{display:block;width:100%;max-width:210px;height:auto;border:1px solid var(--line);border-radius:8px}
+
+/* iPad im Querformat: alles Wichtige ohne Scrollen auf einem Bildschirm */
+.wrap{padding-block:12px 32px}
+header.top{margin-bottom:12px}
+h1{font-size:clamp(1.25rem,2.2vw,1.65rem)}
+.task{padding:14px 18px;margin-bottom:12px}
+.slider{height:clamp(220px,calc(100vh - 340px),380px);height:clamp(220px,calc(100dvh - 340px),380px)}
+#atom,#chart,#levels{max-height:calc(100vh - 290px);max-height:calc(100dvh - 290px);min-height:220px}
+.figure-row svg{max-width:280px;flex-basis:280px}
+@media (max-width:900px){
+  .stage{grid-template-columns:128px minmax(0,1fr)}
+  .chart-panel{grid-column:1 / -1}
+  .stage.p2,.stage.p3{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:820px){.order-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){
+  .stage{grid-template-columns:112px minmax(0,1fr);gap:10px}
+  .device{padding:10px 4px}
+  .slider{width:100px;height:300px}
+  .lcd output{font-size:17px}
+  .panel{padding:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media print{
+  header.top,#experiment,.no-print,.overlay{display:none!important}
+  #ordering{display:flex!important}
+  body{background:#FFFFFF}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Vom Ionisierungsenergiediagramm zum Energiestufenmodell</h1>
+      <p class="sub" id="subtitle" hidden>Schritt-für-Schritt-Anleitung</p>
+    </div>
+    <div class="tools">
+      <button class="btn ghost" id="fullscreen" type="button">Vollbild</button>
+      <button class="btn ghost" id="restart" type="button">Neu starten</button>
+    </div>
+  </header>
+
+  <main id="experiment">
+    <section class="task" id="task" aria-live="polite"></section>
+
+    <section class="stage" id="stage">
+      <div class="device" id="device">
+        <span class="eyebrow">Spannung</span>
+        <div class="slider" id="slider" role="slider" tabindex="0" aria-label="Spannung in Elektronenvolt" aria-valuemin="0" aria-valuemax="2500" aria-valuenow="0" aria-valuetext="0 eV">
+          <div class="rail" id="rail">
+            <div class="funnel bg"></div>
+            <div class="funnel-fill" id="fill"><div class="funnel"></div></div>
+            <div class="thumb" id="thumb"></div>
+          </div>
+        </div>
+        <div class="lcd">
+          <span class="lcd-cap">Anzeige</span>
+          <output id="lcd">0,000</output><span class="unit">eV</span>
+        </div>
+        <p class="hint">Regler nach oben schieben</p>
+      </div>
+
+      <div class="panel" id="atomPanel">
+        <div class="panel-head"><h2>Kern-Hülle-Modell</h2></div>
+        <div class="flash" id="flash" role="status"></div>
+        <svg id="atom" viewBox="0 0 400 400" aria-label="Kern-Hülle-Modell des Aluminium-Atoms"></svg>
+      </div>
+
+      <div class="panel chart-panel" id="chartPanel">
+        <div class="panel-head"><h2>Ionisierungsenergien der Elektronen eines Aluminium-Atoms</h2></div>
+        <div id="chartPalette" hidden>
+          <div class="palette" data-palette data-arrow-chip></div>
+          <p class="palette-hint">Ziehe den Sprung-Pfeil zwischen zwei Säulen und die Farben auf die Säulen. Du kannst auch zuerst einen Pfeil oder eine Farbe antippen und danach die Stelle im Diagramm. Tippe einen Pfeil an, um ihn wieder zu entfernen.</p>
+        </div>
+        <svg id="chart" viewBox="0 0 560 425" aria-label="Säulendiagramm der Ionisierungsenergien"></svg>
+        <div class="row" id="chartActions" hidden><button class="btn" type="button" id="btnCheck">Überprüfen</button></div>
+        <p class="feedback" id="chartFb" role="status"></p>
+      </div>
+
+      <div class="panel" id="modelPanel" hidden>
+        <div class="panel-head"><h2>Energiestufenmodell</h2></div>
+        <div id="modelPalette" hidden>
+          <div class="palette" data-palette></div>
+          <p class="palette-hint">Ziehe jede Farbe auf das passende Energieniveau.</p>
+        </div>
+        <div class="model-body">
+          <svg id="levels" viewBox="0 0 400 400" aria-label="Energiestufenmodell des Aluminium-Atoms"></svg>
+          <div class="model-side">
+            <div id="fillRow" hidden><button class="btn small" type="button" id="btnFill">Energieniveaus besetzen</button></div>
+            <div class="tray" id="tray" hidden></div>
+          </div>
+        </div>
+        <p class="feedback" id="modelFb" role="status"></p>
+      </div>
+    </section>
+
+    <div class="next-row" id="nextRow" hidden><button class="btn" type="button" id="btnNext">Weiter</button></div>
+  </main>
+
+  <section id="ordering" class="order" hidden>
+    <div class="intro">
+      <span class="eyebrow">Arbeitsauftrag</span>
+      <p>Bringe die Schritte der Anleitung und die Bilder in die richtige Reihenfolge. Überprüfe anschließend deine Lösung.</p>
+    </div>
+    <div class="order-grid">
+      <div class="order-col"><h2>Schritte</h2><ol class="steps" id="steps" aria-label="Schritte"></ol></div>
+      <div class="order-col"><h2>Bilder</h2><ol class="steps" id="images" aria-label="Bilder"></ol></div>
+    </div>
+    <p class="feedback" id="orderFeedback" role="status"></p>
+    <div class="row no-print">
+      <button class="btn" type="button" id="checkOrder">Überprüfen</button>
+      <button class="btn ghost" type="button" id="shuffle">Neu mischen</button>
+      <button class="btn ghost" type="button" id="backToModel">Zurück zum Energiestufenmodell</button>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalBody">
+    <div class="modal-head" id="modalHead" hidden>
+      <svg class="ws-icon" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M10 4h20l10 10v30H10z" fill="#FFFFFF" stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M30 4v10h10" fill="#FFF2CC" stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M16 22h18M16 29h18M16 36h11" stroke="#75685C" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M33 44l2-7 9-9 5 5-9 9z" fill="#E0A526" stroke="#2A2420" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+      <span>Arbeitsblatt</span>
+    </div>
+    <div id="modalBody"></div>
+    <div class="actions"><button class="btn" type="button" id="modalBtn">OK</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const IE = [5.985,18.829,28.448,119.987,153.827,190.485,241.757,284.655,330.133,398.745,442.005,2085.976,2304.144];
+const EMAX = 2500;
+// Elektron 1–3 → n = 3 · Elektron 4–11 → n = 2 · Elektron 12–13 → n = 1
+const GROUPS = [{from:0,to:2,n:3},{from:3,to:10,n:2},{from:11,to:12,n:1}];
+const CAP = {1:2, 2:8, 3:3};
+const JUMPS = [2, 10];   // Sprünge zwischen 3./4. und 11./12. Elektron
+const levelOf = i => i < 3 ? 3 : (i < 11 ? 2 : 1);
+const COLORS = [
+  {id:'c1', text:'Gruppe mit der höchsten Ionisierungsenergie'},
+  {id:'c2', text:'Gruppe mit mittlerer Ionisierungsenergie'},
+  {id:'c3', text:'Gruppe mit der niedrigsten Ionisierungsenergie'}
+];
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+function s(tag, attrs, parent, text){
+  const e = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const fmt = (v, d = 3) => v.toLocaleString('de-DE', {minimumFractionDigits:d, maximumFractionDigits:d});
+const wait = ms => new Promise(r => setTimeout(r, RM ? Math.min(ms, 60) : ms));
+// kleines Arbeitsblatt-Icon für Hinweise, die sich auf das Arbeitsblatt beziehen
+const WS = document.querySelector('.ws-icon').outerHTML.replace('class="ws-icon"', 'class="ws-icon sm"');
+
+const state = {
+  step:'exp', removed:0, t:0, locked:false, dragging:false,
+  colors:Array(13).fill(null), jumps:new Set(), colorsDone:false,
+  justAdded:-1, armed:null,
+  levelColor:{1:null, 2:null, 3:null}, count:{1:0, 2:0, 3:0}
+};
+
+/* ---------- Ziehen mit Maus, Stift und Finger ---------- */
+function startDrag(e, ghostClass, onMove, onDrop){
+  if (e.button > 0) return;
+  e.preventDefault();
+  const sx = e.clientX, sy = e.clientY;
+  let moved = false, ghost = null;
+  const hit = ev => document.elementFromPoint(ev.clientX, ev.clientY);
+  const move = ev => {
+    if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 6){
+      moved = true;
+      ghost = document.createElement('div');
+      ghost.className = 'drag-ghost ' + ghostClass;
+      document.body.appendChild(ghost);
+    }
+    if (!moved) return;
+    ghost.style.left = ev.clientX + 'px';
+    ghost.style.top = ev.clientY + 'px';
+    onMove && onMove(hit(ev), ev);
+  };
+  const up = ev => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+    if (ghost) ghost.remove();
+    const cancel = ev.type === 'pointercancel';
+    onDrop(cancel ? null : hit(ev), moved && !cancel, ev);
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
+}
+
+/* ---------- Spannungsregler ---------- */
+const slider = $('slider'), rail = $('rail'), thumb = $('thumb'), fill = $('fill'), lcd = $('lcd');
+const tOf = E => Math.cbrt(E / EMAX);   // kubische Skala: feine Auflösung bei kleinen Werten
+const EOf = t => EMAX * t * t * t;
+// Die gefüllte Trichterform braucht die volle Höhe der Schiene
+const setRailH = () => rail.style.setProperty('--rail-h', rail.clientHeight + 'px');
+setRailH();
+window.addEventListener('resize', setRailH);
+function setT(t, silent){
+  state.t = Math.max(0, Math.min(1, t));
+  const E = EOf(state.t);
+  thumb.style.bottom = (state.t * 100) + '%';
+  fill.style.height = (state.t * 100) + '%';
+  lcd.textContent = fmt(E);
+  slider.setAttribute('aria-valuenow', E.toFixed(3));
+  slider.setAttribute('aria-valuetext', fmt(E) + ' eV');
+  if (!silent && !state.locked && state.removed < 13 && E >= IE[state.removed]) ionize();
+}
+function fromPointer(e){
+  const r = rail.getBoundingClientRect();
+  setT((r.bottom - e.clientY) / r.height);
+}
+slider.addEventListener('pointerdown', e => {
+  if (state.locked || state.removed >= 13) return;
+  state.dragging = true;
+  slider.classList.add('dragging');
+  try { slider.setPointerCapture(e.pointerId); } catch(_) {}
+  fromPointer(e);
+  e.preventDefault();
+});
+slider.addEventListener('pointermove', e => { if (state.dragging && !state.locked) fromPointer(e); });
+const endDrag = e => {
+  state.dragging = false;
+  slider.classList.remove('dragging');
+  try { slider.releasePointerCapture(e.pointerId); } catch(_) {}
+};
+slider.addEventListener('pointerup', endDrag);
+slider.addEventListener('pointercancel', endDrag);
+slider.addEventListener('keydown', e => {
+  if (state.locked || state.removed >= 13) return;
+  const st = {ArrowUp:.004, ArrowRight:.004, ArrowDown:-.004, ArrowLeft:-.004, PageUp:.04, PageDown:-.04};
+  if (e.key in st){ setT(state.t + st[e.key]); e.preventDefault(); }
+  else if (e.key === 'Home'){ setT(0); e.preventDefault(); }
+});
+function springBack(){
+  return new Promise(resolve => {
+    const t0 = state.t, start = performance.now(), dur = RM ? 1 : 550;
+    let done = false;
+    const finish = () => { if (done) return; done = true; setT(0, true); resolve(); };
+    function frame(now){
+      if (done) return;
+      const p = Math.min(1, (now - start) / dur);
+      setT(t0 * Math.pow(1 - p, 3), true);
+      if (p < 1) requestAnimationFrame(frame); else finish();
+    }
+    requestAnimationFrame(frame);
+    setTimeout(finish, dur + 250);   // falls der Tab im Hintergrund ist und keine Animation läuft
+  });
+}
+
+/* ---------- Kern-Hülle-Modell ---------- */
+const atom = $('atom');
+// Elektronen in der Reihenfolge, in der sie verschwinden: [Abstand vom Kern, Winkel°]
+const EPOS = [[165,262],[160,22],[150,146],[140,322],[130,82],[120,202],[110,250],[105,32],[95,120],[90,300],[85,172],[55,70],[50,232]];
+const eDots = [];
+function buildAtom(){
+  s('circle', {cx:200, cy:200, r:182, class:'hull'}, atom);
+  s('circle', {cx:200, cy:200, r:14, class:'nucleus'}, atom);
+  s('text', {x:200, y:203, 'text-anchor':'middle', class:'nucleus-text'}, atom, '13 p⁺');
+  EPOS.forEach(([r, deg]) => {
+    const a = deg * Math.PI / 180;
+    eDots.push(s('circle', {cx:(200 + r * Math.cos(a)).toFixed(1), cy:(200 - r * Math.sin(a)).toFixed(1), r:7, class:'e-dot'}, atom));
+  });
+}
+let flashTimer;
+function flash(msg){
+  const f = $('flash');
+  f.textContent = msg;
+  f.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => f.classList.remove('show'), 1800);
+}
+async function ionize(){
+  state.locked = true;
+  state.dragging = false;
+  slider.classList.remove('dragging');
+  const i = state.removed;
+  setT(tOf(IE[i]), true);
+  lcd.textContent = fmt(IE[i]);
+  eDots[i].classList.add('gone');
+  state.removed++;
+  state.justAdded = i;
+  renderChart();
+  state.justAdded = -1;
+  updateProgress();
+  flash(`${i + 1}. Elektron entfernt · ${fmt(IE[i])} eV`);
+  await wait(900);
+  await springBack();
+  if (state.removed < 13) { state.locked = false; return; }
+  $('device').classList.add('off');
+  await wait(700);
+  await modal('<p>Bearbeite nun die Teilaufgaben b) und c) auf dem Arbeitsblatt.</p>', 'Erledigt', {ws:true});
+  task.innerHTML = `
+    <span class="eyebrow">Arbeitsauftrag</span>
+    <p>Wenn du die Teilaufgaben b) und c) bearbeitet hast, überprüfe deine Ergebnisse.</p>
+    <div class="row"><button class="btn" type="button" id="btnToCheck">Zur Überprüfung</button></div>`;
+  $('btnToCheck').focus();
+  $('btnToCheck').addEventListener('click', enterCheck);
+}
+
+/* ---------- Diagramm (lineare Achse) ---------- */
+const chart = $('chart');
+const C = {L:78, R:545, T:22, B:350};
+C.W = C.R - C.L; C.H = C.B - C.T; C.slot = C.W / 13; C.bw = C.slot * 0.58;
+const yOf = v => C.B - v / EMAX * C.H;
+const cx = i => C.L + C.slot * (i + .5);
+const bxOf = i => C.L + C.slot * (i + 1);     // Grenze zwischen Säule i und i+1
+function renderChart(){
+  chart.innerHTML = '';
+  const defs = s('defs', null, chart);
+  const m = s('marker', {id:'arrow', viewBox:'0 0 10 10', refX:5, refY:5, markerWidth:7, markerHeight:7, orient:'auto-start-reverse'}, defs);
+  s('path', {d:'M0,0 L10,5 L0,10 z', fill:'#B3261E'}, m);
+  const ma = s('marker', {id:'axisArrow', viewBox:'0 0 10 10', refX:5, refY:5, markerWidth:8, markerHeight:8, orient:'auto-start-reverse'}, defs);
+  s('path', {d:'M0,0 L10,5 L0,10 z', fill:'#2A2420'}, ma);
+
+  for (let v = 0; v <= EMAX; v += 250){
+    const y = yOf(v), major = v % 500 === 0;
+    s('line', {x1:C.L, x2:C.R, y1:y, y2:y, class: major ? 'grid' : 'grid minor'}, chart);
+    if (major) s('text', {x:C.L - 8, y:y + 4, 'text-anchor':'end', class:'tick-label'}, chart, v.toLocaleString('de-DE'));
+  }
+
+  for (let i = 0; i < 13; i++){
+    const x = cx(i) - C.bw / 2;
+    if (i >= state.removed){
+      s('rect', {x, y:C.B - 12, width:C.bw, height:12, rx:2, class:'slot'}, chart);
+      continue;
+    }
+    // mindestens ein dünner Strich, damit auch das 1. Elektron sichtbar ist
+    const h = Math.max(C.B - yOf(IE[i]), 2), y = C.B - h;
+    const col = state.colors[i];
+    let cls = 'bar' + (col ? ' ' + col : '');
+    if (i === state.justAdded) cls += ' grow';
+    const r = s('rect', {x, y, width:C.bw, height:h, class:cls}, chart);
+    s('title', null, r, `${i + 1}. Elektron: ${fmt(IE[i])} eV`);
+    if (col === 'c3') s('rect', {x, y, width:C.bw, height:h, class:'bar-tint'}, chart);
+  }
+
+  s('line', {x1:C.L, y1:C.B, x2:C.L, y2:C.T - 12, class:'axis', 'marker-end':'url(#axisArrow)'}, chart);
+  s('line', {x1:C.L, y1:C.B, x2:C.R + 8, y2:C.B, class:'axis'}, chart);
+  for (let i = 0; i < 13; i++) s('text', {x:cx(i), y:C.B + 16, 'text-anchor':'middle', class:'tick-label'}, chart, i + 1);
+
+  if (state.colorsDone){
+    GROUPS.forEach(g => {
+      const x1 = C.L + C.slot * g.from + 5, x2 = C.L + C.slot * (g.to + 1) - 5, y = C.B + 26;
+      s('path', {d:`M${x1},${y} v6 H${x2} v-6`, class:'bracket'}, chart);
+      s('text', {x:(x1 + x2) / 2, y:y + 22, 'text-anchor':'middle', class:'group-label'}, chart, `${g.to - g.from + 1} Elektronen`);
+    });
+  }
+  const xt = state.colorsDone ? C.B + 68 : C.B + 42;
+  s('text', {x:(C.L + C.R) / 2, y:xt, 'text-anchor':'middle', class:'axis-title'}, chart, 'Nummer des entfernten Elektrons');
+  s('text', {x:18, y:(C.T + C.B) / 2, 'text-anchor':'middle', class:'axis-title', transform:`rotate(-90 18 ${(C.T + C.B) / 2})`}, chart, 'Ionisierungsenergie [eV]');
+
+  // Trefferflächen nur auf der Säule selbst (mit kleinem Rand, damit dünne Säulen berührbar bleiben)
+  if (state.step === 'color'){
+    for (let i = 0; i < state.removed; i++){
+      const top = Math.min(yOf(IE[i]) - 3, C.B - 14);
+      s('rect', {x:cx(i) - C.bw / 2 - 3, y:top, width:C.bw + 6, height:C.B + 4 - top, class:'hit', 'data-col':i}, chart);
+    }
+  }
+
+  // Sprung-Pfeile der Kinder
+  [...state.jumps].forEach(i => {
+    const bx = bxOf(i), y1 = yOf(IE[i]);
+    const y2 = Math.min(yOf(IE[i + 1]), y1 - 18);
+    s('line', {x1:bx, x2:bx, y1, y2:y2 + 3, class:'jump', 'marker-end':'url(#arrow)'}, chart);
+    if (state.colorsDone) s('text', {x:bx - 6, y:y2 - 8, 'text-anchor':'end', class:'jump-label'}, chart, 'Sprung');
+    if (state.step === 'color') s('line', {x1:bx, x2:bx, y1:y1 + 4, y2:y2 - 4, class:'arrow-hit', 'data-arrow':i}, chart);
+  });
+}
+// nächstgelegene Lücke zwischen zwei Säulen (0 = zwischen 1. und 2. Elektron)
+// Bildschirmpunkt in SVG-Koordinaten (stimmt auch, wenn das SVG in der Höhe begrenzt ist)
+function svgPoint(svg, ev){
+  const m = svg.getScreenCTM();
+  if (!m) return null;
+  return new DOMPoint(ev.clientX, ev.clientY).matrixTransform(m.inverse());
+}
+function gapAt(ev){
+  const p = svgPoint(chart, ev);
+  if (!p) return null;
+  const sx = p.x, sy = p.y;
+  if (sx < C.L + C.slot * .5 || sx > C.L + C.slot * 12.5 || sy < C.T - 12 || sy > C.B + 24) return null;
+  return Math.min(11, Math.max(0, Math.round((sx - C.L) / C.slot) - 1));
+}
+chart.addEventListener('click', e => {
+  if (state.step !== 'color') return;
+  const a = e.target.closest('[data-arrow]');
+  if (a && state.armed !== 'arrow') { state.jumps.delete(+a.dataset.arrow); say(''); renderChart(); return; }
+  if (state.armed === 'arrow'){
+    const g = gapAt(e);
+    if (g === null) return;
+    if (state.jumps.has(g)) state.jumps.delete(g); else state.jumps.add(g);
+    say(''); renderChart();
+    return;
+  }
+  const h = e.target.closest('[data-col]');
+  if (h && state.armed) colorBar(+h.dataset.col, state.armed);
+});
+
+/* ---------- Farbauswahl und Sprung-Pfeil ---------- */
+function buildPalettes(){
+  document.querySelectorAll('[data-palette]').forEach(p => {
+    const items = COLORS.slice();
+    if (p.hasAttribute('data-arrow-chip')) items.unshift({id:'arrow', text:'Sprung-Pfeil'});
+    items.forEach(c => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.dataset.color = c.id;
+      b.innerHTML = `<span class="sw ${c.id}"></span><span>${c.text}</span>`;
+      p.appendChild(b);
+      b.addEventListener('pointerdown', e => {
+        startDrag(e, 'sw ' + c.id,
+          (el, ev) => {
+            if (state.step === 'color' && c.id !== 'arrow') { const h = el && el.closest('[data-col]'); if (h) colorBar(+h.dataset.col, c.id); }
+            else if (state.step === 'levels') markZone(ev);
+          },
+          (el, moved, ev) => {
+            markZone(null);
+            if (!moved) { arm(c.id); return; }
+            if (state.step === 'color'){
+              if (c.id === 'arrow') { const g = gapAt(ev); if (g !== null) { state.jumps.add(g); say(''); renderChart(); } }
+              else { const h = el && el.closest('[data-col]'); if (h) colorBar(+h.dataset.col, c.id); }
+            }
+            else if (state.step === 'levels') { const n = levelAt(ev); if (n) assignLevel(n, c.id); }
+          });
+      });
+      b.addEventListener('click', e => { if (e.detail === 0) arm(c.id); });  // Tastatur
+    });
+  });
+}
+function arm(id){
+  state.armed = state.armed === id ? null : id;
+  document.querySelectorAll('.chip').forEach(ch => ch.classList.toggle('armed', ch.dataset.color === state.armed));
+}
+function colorBar(i, id){
+  if (state.colors[i] === id) return;
+  state.colors[i] = id;
+  say('');
+  renderChart();
+}
+
+/* ---------- Pop-up ---------- */
+// ws: Hinweis zum Arbeitsblatt (mit Icon) · aside: seitlich, damit das Modell sichtbar bleibt
+function modal(html, label, opts = {}){
+  return new Promise(resolve => {
+    $('modalBody').innerHTML = html;
+    $('modalHead').hidden = !opts.ws;
+    $('modal').classList.toggle('ws', !!opts.ws);
+    $('overlay').classList.toggle('aside', !!opts.aside);
+    $('modal').scrollTop = 0;
+    const btn = $('modalBtn');
+    btn.textContent = label;
+    $('overlay').hidden = false;
+    btn.focus({preventScroll:true});
+    btn.onclick = () => { $('overlay').hidden = true; btn.onclick = null; resolve(); };
+  });
+}
+
+/* ---------- Auftragskarte und Weiter-Knopf ---------- */
+const task = $('task');
+function say(msg, kind){
+  // Rückmeldung direkt am Arbeitsbereich, damit nichts darüber verrutscht
+  const f = state.step === 'color' ? $('chartFb') : $('modelFb');
+  f.textContent = msg;
+  f.className = 'feedback' + (kind ? ' ' + kind : '');
+}
+function showNext(label, fn){
+  const b = $('btnNext');
+  b.textContent = label;
+  b.onclick = () => { $('nextRow').hidden = true; fn(); };
+  $('nextRow').hidden = false;
+}
+function updateProgress(){
+  const p = $('progress');
+  if (!p) return;
+  [...p.children].forEach((d, i) => d.classList.toggle('gone', i < state.removed));
+  $('count').textContent = state.removed;
+}
+function taskExperiment(){
+  task.innerHTML = `
+    <span class="eyebrow">Arbeitsauftrag</span>
+    <p>Erhöhe die Spannung mit dem Schieberegler, bis sich ein Elektron aus dem Atom löst. Der Regler springt danach zurück. Entferne so nacheinander alle 13 Elektronen und beobachte das Ionisierungsenergie-Diagramm.</p>
+    <div class="row"><div class="progress" id="progress" aria-hidden="true">${'<i></i>'.repeat(13)}</div>
+    <span>Entfernte Elektronen: <strong id="count">0</strong> von 13</span></div>`;
+}
+
+/* ---------- Überprüfung: Sprünge und Gruppen ---------- */
+function enterCheck(){
+  state.step = 'color';
+  $('stage').classList.add('p2');
+  $('chartPanel').classList.add('p-enter');
+  $('chartPalette').hidden = false;
+  $('chartActions').hidden = false;
+  renderChart();
+  task.innerHTML = `
+    <span class="eyebrow">Arbeitsauftrag</span>
+    <p class="ws-note">${WS}<span>Überprüfe deine Markierungen vom Arbeitsblatt: Ziehe Sprung-Pfeile zwischen die Säulen, zwischen denen die Ionisierungsenergie sprunghaft ansteigt. Färbe dann die Säulen jeder Gruppe in der passenden Farbe ein. Tippe anschließend unter dem Diagramm auf „Überprüfen“.</span></p>`;
+  window.scrollTo({top:0, behavior: RM ? 'auto' : 'smooth'});
+}
+function checkColors(){
+  const jumpsOk = state.jumps.size === JUMPS.length && JUMPS.every(j => state.jumps.has(j));
+  if (state.jumps.size === 0) { say('Markiere zuerst die Sprünge mit Pfeilen.', 'bad'); return; }
+  if (state.colors.some(c => !c)) { say('Färbe zuerst alle 13 Säulen ein.', 'bad'); return; }
+  const colorsOk = state.colors.every((c, i) => c === 'c' + levelOf(i));
+  if (!jumpsOk){
+    say('Die Sprung-Pfeile stimmen noch nicht. Setze die Pfeile genau dort, wo die Ionisierungsenergie von einer Säule zur nächsten besonders stark ansteigt. An diesen Sprüngen trennen sich die Gruppen.', 'bad');
+    return;
+  }
+  if (!colorsOk){
+    const uniform = GROUPS.map(g => state.colors.slice(g.from, g.to + 1)).every(a => a.every(c => c === a[0]));
+    const distinct = new Set(GROUPS.map(g => state.colors[g.from])).size === 3;
+    if (uniform && distinct) say('Die Sprünge und Gruppen hast du richtig erkannt, aber die Farben passen noch nicht. Lies in der Farbauswahl noch einmal nach, welche Farbe zu welcher Gruppe gehört.', 'bad');
+    else say('Die Sprünge stimmen. Die Farben noch nicht: Alle Säulen zwischen zwei Sprüngen gehören zu einer Gruppe und bekommen dieselbe Farbe.', 'bad');
+    return;
+  }
+  say('');
+  state.colorsDone = true;
+  state.step = 'colorDone';
+  arm(null);
+  $('chartPalette').hidden = true;
+  $('chartActions').hidden = true;
+  renderChart();
+  task.innerHTML = `
+    <span class="eyebrow">Richtig!</span>
+    <p class="feedback ok">Richtig markiert und eingefärbt! Zwischen dem 3. und 4. sowie zwischen dem 11. und 12. Elektron steigt die Ionisierungsenergie sprunghaft an. Die beiden Sprünge teilen die 13 Elektronen in drei Gruppen: 3, 8 und 2 Elektronen.</p>`;
+  showNext('Energiestufenmodell erstellen', taskLines);
+}
+$('btnCheck').addEventListener('click', checkColors);
+
+/* ---------- Energiestufenmodell ---------- */
+const levels = $('levels');
+const LV = {1:330, 2:172, 3:70};   // Abstand n1→n2 größer als n2→n3
+const LX1 = 80, LX2 = 300;
+const M = {};
+function buildLevels(){
+  levels.innerHTML = '';
+  const defs = s('defs', null, levels);
+  const mk = s('marker', {id:'gapArrow', viewBox:'0 0 10 10', refX:5, refY:5, markerWidth:6, markerHeight:6, orient:'auto-start-reverse'}, defs);
+  s('path', {d:'M0,0 L10,5 L0,10 z', fill:'#B3261E'}, mk);
+  M.bands = {}; M.lines = {}; M.labels = {}; M.dots = {}; M.zones = {};
+  [1, 2, 3].forEach(n => {
+    M.bands[n] = s('rect', {x:66, y:LV[n] - 30, width:290, height:40, rx:9, class:'lv-band'}, levels);
+  });
+  M.axis = s('line', {x1:46, y1:388, x2:46, y2:40, class:'lv-line draw', pathLength:1}, levels);
+  M.head = s('polygon', {points:'46,20 37,42 55,42', class:'arrowhead reveal'}, levels);
+  M.axisLabel = s('text', {x:62, y:34, class:'axis-e reveal'}, levels, 'E');
+  [1, 2, 3].forEach(n => {
+    M.lines[n] = s('line', {x1:LX1, x2:LX2, y1:LV[n], y2:LV[n], class:'lv-line draw', pathLength:1}, levels);
+    M.labels[n] = s('text', {x:LX2 + 12, y:LV[n] + 5, class:'lv-label reveal'}, levels, `n = ${n}`);
+    M.dots[n] = s('g', null, levels);
+  });
+  // Pfeile zu den Abständen (mit den Linien) und ihre Erklärung (erst beim Besetzen)
+  M.gapArrows = {}; M.gapTexts = s('g', {class:'reveal'}, levels);
+  const gap = (key, yA, yB, title, text) => {
+    M.gapArrows[key] = s('line', {x1:58, x2:58, y1:yA - 3, y2:yB + 3, class:'gap-arrow reveal', 'marker-start':'url(#gapArrow)', 'marker-end':'url(#gapArrow)'}, levels);
+    const mid = (yA + yB) / 2;
+    s('text', {x:82, y:mid - 3, class:'gap-title'}, M.gapTexts, title);
+    s('text', {x:82, y:mid + 12, class:'gap-text'}, M.gapTexts, text);
+  };
+  gap(2, LV[1], LV[2], 'großer Abstand', 'großer Sprung zwischen dem 11. und 12. Elektron');
+  gap(3, LV[2], LV[3], 'kleinerer Abstand', 'kleinerer Sprung zwischen dem 3. und 4. Elektron');
+  [1, 2, 3].forEach(n => {
+    M.zones[n] = s('rect', {x:66, y:LV[n] - 30, width:290, height:40, rx:9, class:'zone'}, levels);
+  });
+}
+// Das ganze Modell ist Ablagefläche: abgelegt wird beim nächstgelegenen Energieniveau
+function levelAt(ev){
+  if (!ev || $('modelPanel').hidden) return null;
+  const p = svgPoint(levels, ev);
+  if (!p || p.x < 0 || p.x > 400 || p.y < 0 || p.y > 400) return null;
+  const y = p.y;
+  return [1, 2, 3].reduce((best, n) => Math.abs(y - (LV[n] - 10)) < Math.abs(y - (LV[best] - 10)) ? n : best, 1);
+}
+function markZone(ev){
+  const active = state.step === 'levels' || state.step === 'fill';
+  const n = active ? levelAt(ev) : null;
+  Object.entries(M.zones || {}).forEach(([k, r]) => r.classList.toggle('over', +k === n));
+}
+levels.addEventListener('click', e => {
+  if (state.step === 'fill'){
+    const d = e.target.closest('[data-dot]');
+    if (d) { removeElectron(+d.dataset.dot); return; }
+    const n = levelAt(e);
+    if (n) placeElectron(n);
+    return;
+  }
+  if (state.step === 'levels' && state.armed){
+    const n = levelAt(e);
+    if (n) assignLevel(n, state.armed);
+  }
+});
+
+async function taskLines(){
+  state.step = 'lines';
+  await modal('<p>Wir erarbeiten nun zusammen Teilaufgabe d).</p>', 'Weiter', {ws:true});
+  $('stage').classList.remove('p2');
+  $('stage').classList.add('p3');
+  $('modelPanel').hidden = false;
+  $('modelPanel').classList.add('p-enter');
+  buildLevels();
+  task.innerHTML = `
+    <span class="eyebrow">Teilaufgabe d) · Energieniveaus</span>
+    <p class="ws-note">${WS}<span>Zeichne auf deinem Arbeitsblatt mit Lineal und Bleistift für jede Gruppe an Elektronen eine waagerechte Linie ein. Beginne von unten. Achte dabei darauf, dass der Abstand zwischen der untersten und der mittleren Linie größer ist als der zwischen der mittleren und der obersten Linie.</span></p>`;
+  window.scrollTo({top:0, behavior: RM ? 'auto' : 'smooth'});
+  await wait(500);
+  M.axis.classList.add('on');
+  await wait(900);
+  M.head.classList.add('on');
+  M.axisLabel.classList.add('on');
+  for (const n of [1, 2, 3]){
+    await wait(700);
+    M.lines[n].classList.add('on');
+  }
+  await wait(500);
+  showNext('Weiter', taskLabels);
+}
+async function taskLabels(){
+  state.step = 'labels';
+  task.innerHTML = `
+    <span class="eyebrow">Teilaufgabe d) · Beschriftung</span>
+    <p class="ws-note">${WS}<span>Die Energieniveaus werden von unten nach oben nummeriert: n&nbsp;=&nbsp;1, n&nbsp;=&nbsp;2 und n&nbsp;=&nbsp;3. Übertrage die Beschriftung auf dein Arbeitsblatt.</span></p>`;
+  for (const n of [1, 2, 3]){
+    await wait(500);
+    M.labels[n].classList.add('on');
+  }
+  await wait(300);
+  showNext('Weiter', taskColors);
+}
+
+function merksatzFigure(){
+  return `<svg viewBox="0 0 360 240" role="img" aria-label="Zwei Elektronen auf einem hohen und einem niedrigen Energieniveau mit Pfeilen für die benötigte Energie">
+    <defs><marker id="figArrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B3261E"/></marker></defs>
+    <line x1="30" y1="228" x2="30" y2="30" stroke="#2A2420" stroke-width="2"/>
+    <polygon points="30,14 23,32 37,32" fill="#2A2420"/>
+    <text x="16" y="120" text-anchor="middle" transform="rotate(-90 16 120)" font-family="Atkinson Hyperlegible, sans-serif" font-weight="700" font-size="13" fill="#2A2420">Energie</text>
+    <line x1="44" y1="42" x2="350" y2="42" stroke="#75685C" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="348" y="34" text-anchor="end" font-family="Atkinson Hyperlegible, sans-serif" font-size="12" fill="#75685C">Elektron hat das Atom verlassen</text>
+    <line x1="56" y1="104" x2="176" y2="104" stroke="#2A2420" stroke-width="2.5"/>
+    <circle cx="116" cy="94" r="8" fill="#000"/>
+    <line x1="116" y1="84" x2="116" y2="48" stroke="#B3261E" stroke-width="2.5" marker-end="url(#figArrow)"/>
+    <text x="124" y="70" font-family="Atkinson Hyperlegible, sans-serif" font-size="12" fill="#B3261E">wenig Energie nötig</text>
+    <text x="56" y="122" font-family="Atkinson Hyperlegible, sans-serif" font-size="12" fill="#2A2420">hohes Energieniveau</text>
+    <line x1="200" y1="204" x2="340" y2="204" stroke="#2A2420" stroke-width="2.5"/>
+    <circle cx="270" cy="194" r="8" fill="#000"/>
+    <line x1="270" y1="184" x2="270" y2="48" stroke="#B3261E" stroke-width="2.5" marker-end="url(#figArrow)"/>
+    <text x="278" y="130" font-family="Atkinson Hyperlegible, sans-serif" font-size="12" fill="#B3261E">viel Energie</text>
+    <text x="278" y="145" font-family="Atkinson Hyperlegible, sans-serif" font-size="12" fill="#B3261E">nötig</text>
+    <text x="200" y="222" font-family="Atkinson Hyperlegible, sans-serif" font-size="12" fill="#2A2420">niedriges Energieniveau</text>
+  </svg>`;
+}
+function taskColors(){
+  state.step = 'levels';
+  $('modelPalette').hidden = false;
+  task.innerHTML = `
+    <span class="eyebrow">Ionisierungsenergien zuordnen</span>
+    <div class="figure-row">
+      ${merksatzFigure()}
+      <div class="figtext">
+        <p><strong>Erinnerung:</strong> Um ein Elektron aus dem Atom zu entfernen, muss man ihm Energie zuführen. Wenn ein Elektron wenig Energie hat (niedriges Energieniveau), muss ihm viel Energie zugeführt werden, wenn es viel Energie hat (hohes Energieniveau), ist wenig Energie nötig.</p>
+        <p><strong>Auftrag:</strong> Ordne den Energieniveaus die Ionisierungsenergien zu, indem du die Farben der entsprechenden Gruppe auf die Linien ziehst.</p>
+      </div>
+    </div>`;
+}
+function assignLevel(n, id){
+  if (state.levelColor[n]) { say(`Das Energieniveau n = ${n} ist schon richtig eingefärbt.`, 'ok'); return; }
+  if (id !== 'c' + n){
+    say(`Diese Farbe gehört nicht zu n = ${n}. Erinnerung: Elektronen mit viel Energie haben ein hohes Energieniveau. Schau in der Abbildung, wie viel Energie ein Elektron auf einem hohen Energieniveau noch braucht, um das Atom zu verlassen.`, 'bad');
+    return;
+  }
+  state.levelColor[n] = id;
+  M.bands[n].classList.add(id);
+  arm(null);
+  if (![1, 2, 3].every(k => state.levelColor[k])) { say(`Richtig! n = ${n} ist eingefärbt.`, 'ok'); return; }
+  state.step = 'colorsAssigned';
+  say('Alle Farben sind richtig zugeordnet!', 'ok');
+  $('modelPalette').hidden = true;
+  $('fillRow').hidden = false;
+  $('btnFill').focus();
+}
+$('btnFill').addEventListener('click', taskFill);
+
+/* ---------- Elektronen setzen ---------- */
+const tray = $('tray');
+function renderTray(){
+  const left = 13 - (state.count[1] + state.count[2] + state.count[3]);
+  tray.innerHTML = '<span class="label">Elektronen</span>';
+  for (let k = 0; k < left; k++){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'e-src';
+    b.setAttribute('aria-label', 'Elektron');
+    tray.appendChild(b);
+    b.addEventListener('pointerdown', e => {
+      startDrag(e, 'e', (el, ev) => markZone(ev), (el, moved, ev) => {
+        markZone(null);
+        if (!moved) return;
+        const n = levelAt(ev);
+        if (n) placeElectron(n);
+      });
+    });
+  }
+}
+function renderDots(n){
+  const g = M.dots[n];
+  g.innerHTML = '';
+  const k = state.count[n], gap = Math.min(25, 210 / Math.max(k, 1));
+  for (let i = 0; i < k; i++){
+    const c = s('circle', {cx:190 + (i - (k - 1) / 2) * gap, cy:LV[n] - 12, r:8, class:'dot' + (state.step === 'fill' ? ' removable' : ''), 'data-dot':n}, g);
+    if (i === k - 1 && state.lastPlaced === n) c.classList.add('pop');
+  }
+}
+function taskFill(){
+  state.step = 'fill';
+  $('fillRow').hidden = true;
+  say('');
+  renderTray();
+  tray.hidden = false;
+  task.innerHTML = `
+    <span class="eyebrow">Energieniveaus besetzen</span>
+    <p>Besetze die Energieniveaus mit den zugehörigen Elektronen. Ziehe dazu die Elektronen von rechts neben dem Modell auf die Energieniveaus. Tippe ein gesetztes Elektron an, um es zurückzulegen.</p>`;
+}
+// Erläuterung der Abstände erst nach der richtigen Besetzung
+function showGapExplanation(){
+  M.gapArrows[2].classList.add('on');
+  M.gapArrows[3].classList.add('on');
+  M.gapTexts.classList.add('on');
+  task.insertAdjacentHTML('beforeend', `
+    <div class="explain">
+      <p><strong>Warum sind die Abstände unterschiedlich groß?</strong></p>
+      <p>Zwischen dem 11. und dem 12. Elektron steigt die Ionisierungsenergie sehr stark an, von 442 eV auf 2086 eV. Das ist der große Sprung im Diagramm. Deshalb ist der Abstand zwischen dem 1. und 2. Energieniveau groß.</p>
+      <p>Zwischen dem 3. und dem 4. Elektron ist der Sprung kleiner, von 28 eV auf 120 eV. Deshalb liegen das 2. und das 3. Energieniveau näher beieinander.</p>
+    </div>`);
+}
+function placeElectron(n){
+  if (state.step !== 'fill') return;
+  if (state.count[1] + state.count[2] + state.count[3] >= 13) return;
+  state.count[n]++;
+  state.lastPlaced = n;
+  renderDots(n);
+  state.lastPlaced = null;
+  renderTray();
+  say('');
+  if (state.count[1] + state.count[2] + state.count[3] === 13) evaluateFill();
+}
+function removeElectron(n){
+  if (state.step !== 'fill' || state.count[n] === 0) return;
+  state.count[n]--;
+  renderDots(n);
+  renderTray();
+  say('');
+}
+// Rückmeldung erst, wenn alle 13 Elektronen verteilt sind
+function evaluateFill(){
+  const wrong = [1, 2, 3].filter(n => state.count[n] !== CAP[n]);
+  if (wrong.length){
+    say(`Noch nicht richtig. Prüfe die Anzahl der Elektronen auf ${wrong.map(n => 'n = ' + n).join(' und ')}. Vergleiche mit den Gruppen im Ionisierungsenergie-Diagramm. Tippe ein Elektron an, um es zurückzulegen.`, 'bad');
+    return;
+  }
+  state.step = 'filled';
+  [1, 2, 3].forEach(renderDots);
+  tray.hidden = true;
+  say('Richtig! n = 1 ist mit 2 Elektronen, n = 2 mit 8 Elektronen und n = 3 mit 3 Elektronen besetzt.', 'ok');
+  showGapExplanation();
+  setTimeout(async () => {
+    $('modelPanel').scrollIntoView({block:'center', behavior: RM ? 'auto' : 'smooth'});
+    await wait(400);
+    await modal('<p>Übertrage die Besetzung der Energieniveaus in dein Energiestufenmodell auf dem Arbeitsblatt.</p>', 'Erledigt', {ws:true, aside:true});
+    showNext('Abschluss', openOrdering);
+    $('btnNext').focus();
+  }, RM ? 0 : 700);
+}
+
+/* ---------- Abschluss: Schritt-für-Schritt-Anleitung ---------- */
+// \n = neuer Absatz ·   = geschütztes Leerzeichen, damit „n = 1“ nicht getrennt wird
+const STEPS = [
+  'Markiere Sprünge im Ionisierungsenergiediagramm und bilde Gruppen an Elektronen mit ähnlichen Ionisierungsenergien.',
+  'Zeichne die senkrechte Energieachse und beschrifte sie mit E (E steht für Energie).',
+  'Zeichne für jede Gruppe an Elektronen eine waagerechte Linie ein. Beginne von unten.\nAchte dabei darauf, dass der Abstand zwischen der untersten und der mittleren Linie größer ist als der zwischen der mittleren und der obersten Linie.',
+  'Beschrifte die Linien von unten nach oben mit n = 1, n = 2, n = 3, um die Energieniveaus klar zuzuordnen.',
+  'Besetze die Energieniveaus im Energiestufenmodell mit den zugehörigen Elektronen.'
+];
+const IMG_ALT = [
+  'Ionisierungsenergie-Diagramm mit Sprüngen und drei farbigen Gruppen',
+  'Senkrechte Energieachse mit Pfeilspitze und E',
+  'Energieachse mit drei waagerechten Linien',
+  'Energieachse mit drei beschrifteten Linien n = 1, n = 2, n = 3',
+  'Beschriftete Energieniveaus mit 2, 8 und 3 Elektronen'
+];
+// Bilder im Stil der App; Farben und Schriften stehen direkt im SVG, damit sie auch im PDF stimmen
+function stepImage(id, bg = '#FFFFFF'){
+  const F = 'font-family="Helvetica, Arial, sans-serif"';
+  const INK = '#2A2420';
+  const LY = {1:126, 2:72, 3:44};
+  const EDGE = {1:'#CFA63A', 2:'#6F98C6', 3:'#B16F93'};
+  const axis = `<line x1="34" y1="142" x2="34" y2="20" stroke="${INK}" stroke-width="2.2"/>
+    <polygon points="34,8 28,22 40,22" fill="${INK}"/>
+    <text x="44" y="19" ${F} font-size="13" font-weight="700" font-style="italic" fill="${INK}">E</text>`;
+  const outlines = [1, 2, 3].map(n => `<rect x="48" y="${LY[n] - 15}" width="144" height="21" rx="5" fill="none" stroke="${EDGE[n]}" stroke-width="1.8"/>`).join('');
+  const lines = [1, 2, 3].map(n => `<line x1="56" x2="184" y1="${LY[n]}" y2="${LY[n]}" stroke="${INK}" stroke-width="2.2"/>`).join('');
+  const labels = [1, 2, 3].map(n => `<text x="198" y="${LY[n] + 4}" ${F} font-size="11" font-weight="700" fill="${INK}">n = ${n}</text>`).join('');
+  const dots = [1, 2, 3].map(n => {
+    let out = '';
+    for (let k = 0; k < CAP[n]; k++) out += `<circle cx="${120 + (k - (CAP[n] - 1) / 2) * 14}" cy="${LY[n] - 7}" r="4.5" fill="#000"/>`;
+    return out;
+  }).join('');
+  let body = '';
+  if (id === 0){
+    const B = 128, L = 30, slot = 15.2, bw = 9.5, H = 108;
+    const fills = {1:['#FFF2CC','#CFA63A'], 2:['#DEEBF7','#6F98C6'], 3:['#EFDCE6','#B16F93']};
+    let bars = '';
+    IE.forEach((v, i) => {
+      const h = Math.max(v / EMAX * H, 1.5), [f, st] = fills[levelOf(i)];
+      const x = L + slot * i + (slot - bw) / 2;
+      bars += `<rect x="${x.toFixed(1)}" y="${(B - h).toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" fill="${f}" stroke="${st}" stroke-width="1.3"/>`;
+    });
+    const jump = i => {
+      const bx = L + slot * (i + 1), y1 = B - IE[i] / EMAX * H, y2 = Math.min(B - IE[i + 1] / EMAX * H, y1 - 14);
+      return `<line x1="${bx}" x2="${bx}" y1="${y1.toFixed(1)}" y2="${(y2 + 5).toFixed(1)}" stroke="#B3261E" stroke-width="1.6"/>
+        <polygon points="${bx},${y2.toFixed(1)} ${bx - 3.5},${(y2 + 7).toFixed(1)} ${bx + 3.5},${(y2 + 7).toFixed(1)}" fill="#B3261E"/>`;
+    };
+    body = `<line x1="${L}" y1="${B}" x2="${L}" y2="12" stroke="${INK}" stroke-width="1.6"/>
+      <polygon points="${L},4 ${L - 4},14 ${L + 4},14" fill="${INK}"/>
+      <line x1="${L}" y1="${B}" x2="232" y2="${B}" stroke="${INK}" stroke-width="1.6"/>
+      <text x="13" y="${B - H / 2}" text-anchor="middle" transform="rotate(-90 13 ${B - H / 2})" ${F} font-size="8" font-weight="700" fill="${INK}">Ionisierungsenergie [eV]</text>
+      ${bars}${jump(2)}${jump(10)}
+      <text x="132" y="143" text-anchor="middle" ${F} font-size="8" fill="#75685C">Nummer des entfernten Elektrons</text>`;
+  }
+  else if (id === 1) body = axis;
+  else if (id === 2) body = axis + outlines + lines;
+  else if (id === 3) body = axis + outlines + lines + labels;
+  else body = axis + outlines + lines + labels + dots;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" width="480" height="300" role="img" aria-label="${IMG_ALT[id]}"><rect width="240" height="150" fill="${bg}"/>${body}</svg>`;
+}
+
+const textList = $('steps'), imgList = $('images');
+let orderChecked = null;
+function shuffled(){
+  let a;
+  do {
+    a = STEPS.map((_, i) => i);
+    for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  } while (a.filter((v, i) => v === i).length > 1);
+  return a;
+}
+function buildList(list, order, kind){
+  list.innerHTML = '';
+  order.forEach(id => {
+    const li = document.createElement('li');
+    li.className = 'step-card' + (kind === 'img' ? ' img-card' : '');
+    li.dataset.id = id;
+    const content = kind === 'img' ? `<div class="thumb-img">${stepImage(id)}</div>` : `<div class="txt">${STEPS[id].split('\n').map(p => `<p>${p}</p>`).join('')}</div>`;
+    li.innerHTML = `<span class="grip" aria-hidden="true">⠿</span><span class="num" aria-hidden="true"></span>${content}
+      <span class="move"><button type="button" class="up" aria-label="nach oben verschieben">▲</button><button type="button" class="down" aria-label="nach unten verschieben">▼</button></span>`;
+    list.appendChild(li);
+  });
+  renumber(list);
+}
+function buildAll(){
+  buildList(textList, shuffled(), 'text');
+  buildList(imgList, shuffled(), 'img');
+  syncRows();
+}
+function renumber(list){
+  const items = [...list.children];
+  items.forEach((li, i) => {
+    li.querySelector('.num').textContent = i + 1;
+    li.querySelector('.up').disabled = i === 0;
+    li.querySelector('.down').disabled = i === items.length - 1;
+  });
+  syncRows();
+}
+// Text und Bild an derselben Position stehen auf einer Höhe
+function syncRows(){
+  const a = [...textList.children], b = [...imgList.children];
+  [...a, ...b].forEach(li => { li.style.minHeight = ''; });
+  if (a.length !== b.length || window.matchMedia('(max-width:820px)').matches || $('ordering').hidden) return;
+  a.forEach((li, i) => {
+    const h = Math.ceil(Math.max(li.getBoundingClientRect().height, b[i].getBoundingClientRect().height));
+    li.style.minHeight = b[i].style.minHeight = h + 'px';
+  });
+}
+window.addEventListener('resize', syncRows);
+function clearOrderFeedback(){
+  orderChecked = null;
+  [textList, imgList].forEach(l => [...l.children].forEach(li => li.classList.remove('ok', 'bad')));
+  $('orderFeedback').textContent = '';
+  $('orderFeedback').className = 'feedback';
+}
+function makeSortable(list){
+  list.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const li = b.closest('li');
+    const up = b.classList.contains('up');
+    if (up && li.previousElementSibling) list.insertBefore(li, li.previousElementSibling);
+    if (!up && li.nextElementSibling) list.insertBefore(li.nextElementSibling, li);
+    renumber(list); clearOrderFeedback();
+    const same = li.querySelector(up ? '.up' : '.down');
+    (same.disabled ? li.querySelector(up ? '.down' : '.up') : same).focus();
+  });
+  // Ziehen am Griff – auf window lauschen, weil der Griff beim Umsortieren seinen Pointer verliert
+  list.addEventListener('pointerdown', e => {
+    const grip = e.target.closest('.grip');
+    if (!grip || e.button > 0) return;
+    e.preventDefault();
+    const li = grip.closest('li');
+    li.classList.add('dragging');
+    const move = ev => {
+      const others = [...list.children].filter(x => x !== li);
+      const after = others.find(x => { const r = x.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
+      if (after) { if (after !== li.nextElementSibling) { list.insertBefore(li, after); renumber(list); } }
+      else if (list.lastElementChild !== li) { list.appendChild(li); renumber(list); }
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      li.classList.remove('dragging');
+      renumber(list); clearOrderFeedback();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  });
+}
+makeSortable(textList);
+makeSortable(imgList);
+function markList(list){
+  let right = 0;
+  [...list.children].forEach((li, i) => {
+    const ok = +li.dataset.id === i;
+    if (ok) right++;
+    li.classList.toggle('ok', ok);
+    li.classList.toggle('bad', !ok);
+  });
+  return right;
+}
+$('checkOrder').addEventListener('click', () => {
+  const t = markList(textList), b = markList(imgList), n = STEPS.length;
+  orderChecked = {t, b};
+  const f = $('orderFeedback');
+  const all = t === n && b === n;
+  f.className = 'feedback ' + (all ? 'ok' : 'bad');
+  f.textContent = all
+    ? 'Alles richtig!'
+    : `Texte: ${t} von ${n} richtig · Bilder: ${b} von ${n} richtig. Verschiebe die rot markierten Karten.`;
+  if (all) modal('<p><strong>Alles richtig!</strong></p><p>Hol dir jetzt die Schritt-für-Schritt-Anleitung am Pult ab.</p>', 'OK');
+});
+$('shuffle').addEventListener('click', () => { buildAll(); clearOrderFeedback(); });
+$('backToModel').addEventListener('click', () => {
+  $('subtitle').hidden = true;
+  $('ordering').hidden = true;
+  $('experiment').hidden = false;
+  window.scrollTo({top:0, behavior: RM ? 'auto' : 'smooth'});
+});
+function openOrdering(){
+  $('subtitle').hidden = false;
+  $('experiment').hidden = true;
+  $('ordering').hidden = false;
+  if (!textList.children.length) buildAll(); else syncRows();
+  window.scrollTo({top:0, behavior: RM ? 'auto' : 'smooth'});
+  $('nextRow').hidden = false;   // bleibt nach „Zurück“ erreichbar
+}
+
+/* ---------- Vollbild ---------- */
+const root = document.documentElement;
+const fsBtn = $('fullscreen');
+const reqFS = root.requestFullscreen || root.webkitRequestFullscreen;
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+if (!reqFS) fsBtn.hidden = true;
+fsBtn.addEventListener('click', () => {
+  if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  else { try { const p = reqFS.call(root); if (p && p.catch) p.catch(() => {}); } catch(_) {} }
+});
+const fsLabel = () => { fsBtn.textContent = fsEl() ? 'Vollbild beenden' : 'Vollbild'; };
+document.addEventListener('fullscreenchange', fsLabel);
+document.addEventListener('webkitfullscreenchange', fsLabel);
+
+/* ---------- Start ---------- */
+$('restart').addEventListener('click', () => location.reload());
+buildAtom();
+buildPalettes();
+renderChart();
+taskExperiment();
+setT(0, true);
+})();
+</script>
+</body>
+</html>
